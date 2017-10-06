@@ -1,0 +1,19 @@
+service: car-wash-skill
+
+frameworkVersion: ">=1.4.0 <2.0.0"
+
+package:
+  exclude:
+    - src/**
+    - .git/**
+    - package.json
+
+provider:
+  name: aws
+  runtime: nodejs6.10
+
+functions:
+  skill:
+    handler: build/bundle.handler
+    events:
+      - alexaSkill
