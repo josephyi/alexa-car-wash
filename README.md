@@ -6,13 +6,13 @@ Work in progress docs...
 * Node 8.6.0 / NPM 5.3.0
   * `nvm install 8.6.0`
 * Rollup
-  * `npm i --g rollup`
+  * `npm i -g rollup`
 
 ### Optional
 * Serverless
-  * `npm i --g serverless`
+  * `npm i -g serverless`
 * Yarn
-  * `npm i --g yarn`
+  * `npm i -g yarn`
 
 ## Quickstart
 
