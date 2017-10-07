@@ -20,8 +20,8 @@
   },
   "scripts": {
     "build": "yarn install && rollup -c",
-    "package": "serverless package",
-    "deploy": "serverless deploy",
+    "package": "yarn install && rollup -c && yarn install --production && sls package",
+    "deploy": "yarn install && rollup -c && yarn install --production && sls deploy",
     "lint": "eslint src/*.js; true"
   }
 }
