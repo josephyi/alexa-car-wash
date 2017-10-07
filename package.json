@@ -14,12 +14,14 @@
     "rollup-plugin-node-resolve": "^3.0.0"
   },
   "dependencies": {
-    "alexa-sdk": "^1.0.14"
+    "alexa-sdk": "^1.0.14",
+    "request": "^2.83.0",
+    "request-promise-native": "^1.0.5"
   },
   "scripts": {
     "build": "yarn install && rollup -c",
-    "package": "serverless package",
-    "deploy": "serverless deploy",
+    "package": "yarn install && rollup -c && yarn install --production && sls package",
+    "deploy": "yarn install && rollup -c && yarn install --production && sls deploy",
     "lint": "eslint src/*.js; true"
   }
 }
