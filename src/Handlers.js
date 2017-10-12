@@ -9,62 +9,92 @@ const LOCATION_PERMISSIONS = [COUNTRY_AND_POSTAL_CODE_PERMISSION];
 const NEED_PERMISSION_MESSAGE =
   "Please enable Location permissions in the Amazon Alexa app.";
 
+const darkskyResponse = async function(address) {
+  const googleMapsResponse = await geocode({ address });
+  const { lat, lng } = googleMapsResponse.results[0].geometry.location;
+  return await forecast(process.env.DARKSKY_API_KEY, lat, lng);
+};
+
+const sayForRainyDays = (timezone, rainyDayTimes) => {
+  const days = rainyDayTimes.reduce((accumulator, item, idx, arr) => {
+
+    const day = moment(item * 1000)
+      .tz(timezone)
+      .startOf("day")
+      .calendar(null, {
+        sameDay: "[today]",
+        nextDay: "[tomorrow]",
+        nextWeek: "dddd",
+        sameElse: "[next] dddd"
+      });
+
+    // humanized day and ', ' and ' and ' as needed
+    const output = `${day}${idx < arr.length - 1 && arr.length > 2 ? ', ': ''}${arr.length > 1 && idx + 1 === arr.length - 1 ? ' and ': ''}`
+
+    return accumulator.concat(output);
+  }, '');
+
+  return `<say-as interpret-as="interjection">boo!</say-as> It's going to rain ${days}, so you might not want to wash your car. Check again tomorrow to see if conditions improve.`;
+};
+
+const unhandledHandler = function() {
+  this.emit(
+    ":ask",
+    `I couldn't understand. Try saying the city and state again.`,
+    `Try saying the city and state again.`
+  );
+};
+
 const carWashCheckHandler = async function() {
-  const { user, device, apiEndpoint } = this.event.context.System;
+  let address = null;
 
-  if (user && user.permissions && user.permissions.consentToken) {
-    const consentToken = user.permissions.consentToken;
-    const deviceId = device.deviceId;
-    const deviceLocationResponse = await postalCodeRequest(
-      deviceId,
-      consentToken,
-      apiEndpoint
-    );
+  if (this.event.request.intent && this.event.request.intent.slots) {
+    const { city, state } = this.event.request.intent.slots;
+    address = `${city.value},${state.value}`;
+  } else {
+    const { user, device, apiEndpoint } = this.event.context.System;
 
-    const googleMapsResponse = await geocode({
-      address: deviceLocationResponse["postalCode"]
-    });
-    const { lat, lng } = googleMapsResponse.results[0].geometry.location;
-    const darkskyResponse = await forecast(
-      process.env.DARKSKY_API_KEY,
-      lat,
-      lng
-    );
-    const forecastWeek = darkskyResponse["daily"]["data"];
-    const lastDayOfRainIndex = forecastWeek
-      .map(day => day["icon"])
-      .lastIndexOf("rain");
-    const timezone = darkskyResponse["timezone"];
+    try {
+      const consentToken = user.permissions.consentToken;
+      const deviceId = device.deviceId;
+      const deviceLocationResponse = await postalCodeRequest(
+        deviceId,
+        consentToken,
+        apiEndpoint
+      );
 
-    switch (lastDayOfRainIndex) {
-      case -1:
-        this.emit(
-          ":tell",
-          `<say-as interpret-as="interjection">huzzah!</say-as> Today is a good day to wash your car because there is no rain in the 7 day forecast.`
-        );
-        break;
-      case 0:
-        this.emit(
-          ":tell",
-          `<say-as interpret-as="interjection">aw man!</say-as> There's rain today, so you probably shouldn't wash your car. Check again tomorrow.`
-        );
-        break;
-      default:
-        const lastDayOfRain = forecastWeek[lastDayOfRainIndex];
-        const daysFrom = moment(lastDayOfRain["time"] * 1000)
-          .tz(timezone)
-          .startOf("day")
-          .calendar(null, {
-            nextDay: "[Tomorrow]",
-            nextWeek: "dddd, MMMM Do",
-            sameElse: "dddd, MMMM Do"
-          });
+      address = deviceLocationResponse["postalCode"];
+    } catch (err) {
+      address = "San Diego,CA";
+    }
+  }
 
-        this.emit(
-          ":tell",
-          `<say-as interpret-as="interjection">le sigh</say-as>. it looks like it might rain ${daysFrom}, so you might want to wait. Check again to see if the forecast changes.`
-        );
-        break;
+  if (address != null) {
+    try {
+      const weatherResponse = await darkskyResponse(address);
+      const timezone = weatherResponse["timezone"];
+      const forecastWeek = weatherResponse["daily"]["data"];
+      const rainyDayTimes = forecastWeek
+        .filter(day => day["icon"] === "rain")
+        .map(item => item["time"]);
+
+      switch (rainyDayTimes.length) {
+        case 0:
+          this.emit(
+            ":tell",
+            `<say-as interpret-as="interjection">huzzah!</say-as> Today is a good day to wash your car because there is no rain in the 7 day forecast.`
+          );
+          break;
+        default:
+          this.emit(":tell", sayForRainyDays(timezone, rainyDayTimes));
+          break;
+      }
+    } catch (error) {
+      this.emit(
+        ":ask",
+        `I'm having difficulty with the location. What's the city and state?`,
+        `What's the city and state?`
+      );
     }
   } else {
     this.emit(
@@ -78,5 +108,6 @@ const carWashCheckHandler = async function() {
 export const Handlers = {
   LaunchRequest: carWashCheckHandler,
   NewSession: carWashCheckHandler,
-  CarWashIntent: carWashCheckHandler
+  CarWashCheckIntent: carWashCheckHandler,
+  Unhandled: unhandledHandler
 };
