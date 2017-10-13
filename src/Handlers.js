@@ -7,7 +7,7 @@ const COUNTRY_AND_POSTAL_CODE_PERMISSION =
   "read::alexa:device:all:address:country_and_postal_code";
 const LOCATION_PERMISSIONS = [COUNTRY_AND_POSTAL_CODE_PERMISSION];
 const NEED_PERMISSION_MESSAGE =
-  "Please enable Location permissions in the Amazon Alexa app.";
+  "To automatically use your device location, please enable Location permissions in the Amazon Alexa app. You can also use a city and state. For example, launch by saying, Ask Car Wash in San Diego, California.";
 
 const darkskyResponse = async function(address) {
   const googleMapsResponse = await geocode({ address });
@@ -65,12 +65,13 @@ const carWashCheckHandler = async function() {
 
       address = deviceLocationResponse["postalCode"];
     } catch (err) {
-      address = "San Diego,CA";
+      console.log(err);
     }
   }
 
   if (address != null) {
     try {
+      console.log('Address - ' + address);
       const weatherResponse = await darkskyResponse(address);
       const timezone = weatherResponse["timezone"];
       const forecastWeek = weatherResponse["daily"]["data"];
