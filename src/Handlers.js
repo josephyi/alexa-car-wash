@@ -52,6 +52,38 @@ const random = array => {
   return array[Math.floor(Math.random() * array.length)];
 };
 
+const forecastResponse = ({ city, state, weatherResponse }) => {
+  const timezone = weatherResponse.timezone;
+  const hourly = weatherResponse.hourly.data;
+
+  const rainyHours = hourly.filter(hour => hour.precipProbability > 0.06);
+  if (rainyHours.length > 0) {
+    const lastRainyHour = rainyHours[rainyHours.length - 1];
+    const lastRainyHourOutput = moment(lastRainyHour.time * 1000)
+      .add(1, "hours")
+      .tz(timezone)
+      .calendar(); // TODO:improve the output by adding the 'until' language here instead of in the returned str..
+
+    return `<say-as interpret-as="interjection">${random(
+      SAD_SPEECHCONS
+    )}!</say-as> In ${city}, ${state}, there's a chance of rain until ${lastRainyHourOutput}. Check again later to see if conditions improve.`;
+  } else {
+    const forecastWeek = weatherResponse["daily"]["data"];
+    const rainyDayTimes = forecastWeek
+      .filter(day => day["icon"] === "rain")
+      .map(item => item["time"]);
+
+    switch (rainyDayTimes.length) {
+      case 0:
+        return `<say-as interpret-as="interjection">${random(
+          HAPPY_SPEECHCONS
+        )}!</say-as>, In ${city}, ${state}, it's a good day to wash your car because there is no rain in the 7 day forecast.`;
+      default:
+        return sayForRainyDays(city, state, timezone, rainyDayTimes);
+    }
+  }
+};
+
 const sayForRainyDays = (city, state, timezone, rainyDayTimes) => {
   const days = rainyDayTimes.reduce((accumulator, item, idx, arr) => {
     const day = moment(item * 1000)
@@ -77,6 +109,10 @@ const sayForRainyDays = (city, state, timezone, rainyDayTimes) => {
   )}!</say-as> In ${city}, ${state}, it's going to rain ${days}, so you might not want to wash your car. Check again tomorrow to see if conditions improve.`;
 };
 
+const stopHandler = function() {
+  this.emit(':tell', 'Byebye!')
+}
+
 const unhandledHandler = function() {
   this.emit(
     ":ask",
@@ -88,7 +124,7 @@ const unhandledHandler = function() {
 const carWashCheckHandler = async function() {
   let address = null;
 
-  if (this.event.request.intent && this.event.request.intent.slots) {
+  if (this.event.request.intent && this.event.request.intent.slots && this.event.request.intent.slots.city.value && this.event.request.intent.slots.state.value) {
     const { city, state } = this.event.request.intent.slots;
     address = `${city.value},${state.value}`;
   } else {
@@ -125,29 +161,11 @@ const carWashCheckHandler = async function() {
         lat,
         lng
       );
-      const timezone = weatherResponse["timezone"];
-      const forecastWeek = weatherResponse["daily"]["data"];
-      const rainyDayTimes = forecastWeek
-        .filter(day => day["icon"] === "rain")
-        .map(item => item["time"]);
 
-      switch (rainyDayTimes.length) {
-        case 0:
-          this.emit(
-            ":tell",
-            `<say-as interpret-as="interjection">${random(
-              HAPPY_SPEECHCONS
-            )}!</say-as>, In ${city}, ${state}, it's a good day to wash your car because there is no rain in the 7 day forecast.`
-          );
-          break;
-        default:
-          this.emit(
-            ":tell",
-            sayForRainyDays(city, state, timezone, rainyDayTimes)
-          );
-          break;
-      }
+      const prompt = forecastResponse({ city, state, weatherResponse });
+      this.emit(":tell", prompt);
     } catch (error) {
+      console.log(error);
       this.emit(
         ":ask",
         `I'm having difficulty with the location. What's the city and state?`,
@@ -167,5 +185,6 @@ export const Handlers = {
   LaunchRequest: carWashCheckHandler,
   NewSession: carWashCheckHandler,
   CarWashCheckIntent: carWashCheckHandler,
-  Unhandled: unhandledHandler
+  Unhandled: unhandledHandler,
+  'AMAZON.StopIntent': stopHandler
 };
