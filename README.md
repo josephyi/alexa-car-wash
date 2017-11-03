@@ -1,3 +1,5 @@
+[![Known Vulnerabilities](https://snyk.io/test/github/josephyi/alexa-car-wash/badge.svg)](https://snyk.io/test/github/josephyi/alexa-car-wash)
+
 # alexa-car-wash
 
 Work in progress docs...
