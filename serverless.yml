@@ -7,6 +7,9 @@ package:
     - src/**
     - .git/**
     - package.json
+    
+custom:
+  stage: "${opt:stage, self:provider.stage}"
 
 provider:
   name: aws
@@ -17,3 +20,4 @@ functions:
     handler: build/bundle.handler
     events:
       - alexaSkill
+    environment: ${file(env.yml):${self:custom.stage}}
