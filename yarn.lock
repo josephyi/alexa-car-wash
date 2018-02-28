@@ -870,19 +870,6 @@ loose-envify@^1.0.0:
   dependencies:
     js-tokens "^3.0.0"
 
-mastercard-api-core@1.4.x:
-  version "1.4.4"
-  resolved "https://registry.yarnpkg.com/mastercard-api-core/-/mastercard-api-core-1.4.4.tgz#48308faf3f5ec68b705473eba4a8a7e499e65036"
-  dependencies:
-    node-forge "^0.6.39"
-    request "^2.81.0"
-
-mastercard-blockchain@^0.0.2:
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/mastercard-blockchain/-/mastercard-blockchain-0.0.2.tgz#7a176466606c0765d1c16c18bf11f3ebf47dbfe4"
-  dependencies:
-    mastercard-api-core "1.4.x"
-
 mime-db@~1.30.0:
   version "1.30.0"
   resolved "https://registry.yarnpkg.com/mime-db/-/mime-db-1.30.0.tgz#74c643da2dd9d6a45399963465b26d5ca7d71f01"
@@ -922,10 +909,6 @@ moment-timezone@^0.5.13:
 ms@2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.0.0.tgz#5608aeadfc00be6c2901df5f9861788de0d597c8"
-
-node-forge@^0.6.39:
-  version "0.6.49"
-  resolved "https://registry.yarnpkg.com/node-forge/-/node-forge-0.6.49.tgz#f1ee95d5d74623938fe19d698aa5a26d54d2f60f"
 
 number-is-nan@^1.0.0:
   version "1.0.1"
@@ -1029,7 +1012,7 @@ request-promise-native@^1.0.5:
     stealthy-require "^1.1.0"
     tough-cookie ">=2.3.3"
 
-request@^2.81.0, request@^2.83.0:
+request@^2.83.0:
   version "2.83.0"
   resolved "https://registry.yarnpkg.com/request/-/request-2.83.0.tgz#ca0b65da02ed62935887808e6f510381034e3356"
   dependencies:
