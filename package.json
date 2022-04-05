@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "alexa-sdk": "^1.0.14",
-    "moment": "^2.18.1",
+    "moment": "^2.29.2",
     "moment-timezone": "^0.5.13",
     "request": "^2.83.0",
     "request-promise-native": "^1.0.5"
